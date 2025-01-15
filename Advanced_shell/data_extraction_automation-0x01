@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# File containing the JSON response
+FILE="data.json"
+
+# Extracting the required fields using jq
+name=$(jq -r '.name' "$FILE")
+height=$(jq -r '.height' "$FILE")
+weight=$(jq -r '.weight' "$FILE")
+type=$(jq -r '.types[0].type.name' "$FILE")
+
+# Convert height from decimeters to meters (height/10)
+height_m=$(echo "$height / 10" | bc)
+
+# Convert weight from hectograms to kilograms (weight/10)
+weight_kg=$(echo "$weight / 10" | bc)
+
+# Use awk to format the output
+formatted_output=$(echo "$name is of type $type, weighs ${weight_kg}kg, and is ${height_m}m tall." | \
+                   awk '{print toupper(substr($0, 1, 1)) substr($0, 2)}')
+
+# Use sed to capitalize the first letter of each word (for a nicer human-readable format)
+final_output=$(echo "$formatted_output" | sed -r 's/\b([a-z])/\u\1/g')
+
+# Display the result
+echo "$final_output"
