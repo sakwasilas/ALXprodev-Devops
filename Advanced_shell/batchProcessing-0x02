@@ -1,0 +1,30 @@
+#!/bin/bash
+
+POKEMONS=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
+API_URL="https://pokeapi.co/api/v2/pokemon"
+ERROR_FILE="errors.txt"
+
+# Loop through Pokémon names
+for pokemon in "${POKEMONS[@]}"; do
+    OUTPUT_FILE="${pokemon}.json"
+    retries=3
+
+    while ((retries > 0)); do
+        curl -s -o "$OUTPUT_FILE" -w "%{http_code}" "$API_URL/$pokemon" | {
+            read status
+            if [[ $status -eq 200 ]]; then
+                echo "Successfully fetched data for $pokemon."
+                break
+            else
+                echo "Failed to fetch $pokemon. Retrying... ($retries left)"
+                ((retries--))
+            fi
+        }
+
+        if ((retries == 0)); then
+            echo "Error: Failed to fetch $pokemon after multiple attempts." >> "$ERROR_FILE"
+        fi
+
+        sleep 2 # Handle rate limiting
+    done
+done
